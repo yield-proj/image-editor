@@ -1,9 +1,6 @@
 package gui.dialogs;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Frame;
-import java.awt.GridLayout;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
@@ -35,8 +32,9 @@ public class JConvolutionDialog extends JDialog {
 	private JTextArea txtrMatrix;
 	private JCheckBox chckbxNormalize;
 
-	public JConvolutionDialog(final Frame owner, String title, boolean modal) {
-		super(owner, title, modal);
+	public JConvolutionDialog(final Window owner, String title) {
+		super(owner, title);
+		setModal(true);
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
 		setResizable(false);
@@ -122,7 +120,7 @@ public class JConvolutionDialog extends JDialog {
 					dispose();
 				} else {
 					matrix = null;
-					JOptionPane.showMessageDialog(owner, "A matriz digitada não é válida!", "Matriz inválida",
+					JOptionPane.showMessageDialog(owner, "A matriz digitada nï¿½o ï¿½ vï¿½lida!", "Matriz invï¿½lida",
 							JOptionPane.INFORMATION_MESSAGE);
 				}
 			}

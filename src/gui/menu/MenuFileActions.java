@@ -38,13 +38,12 @@ public class MenuFileActions {
 			if (fileChooser.showOpenDialog(jfImageEditor) == JFileChooser.APPROVE_OPTION) {
 				for (File file : fileChooser.getSelectedFiles())
 					try {
-						String[] filename = file.getName().split("\\.(?=[^\\.]+$)");
 						BufferedImage img = ImageIO.read(file);
 						if (img != null) {
-							jfImageEditor.addImageTab(filename[0], img);
+							jfImageEditor.setImage(img);
 						} else {
-							JOptionPane.showMessageDialog(jfImageEditor, "Não foi possível abrir o arquivo!",
-									"Formato inválido", JOptionPane.ERROR_MESSAGE);
+							JOptionPane.showMessageDialog(jfImageEditor, "Nï¿½o foi possï¿½vel abrir o arquivo!",
+									"Formato invï¿½lido", JOptionPane.ERROR_MESSAGE);
 						}
 					} catch (IOException e1) {
 						e1.printStackTrace();
@@ -59,7 +58,7 @@ public class MenuFileActions {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			// no image
-			BufferedImage temp = jfImageEditor.getImageTab();
+			BufferedImage temp = jfImageEditor.getImage();
 			if (temp == null) {
 				return;
 			}
@@ -86,7 +85,7 @@ public class MenuFileActions {
 
 				// check if file already exists
 				if (file.exists()) {
-					if (JOptionPane.showConfirmDialog(jfImageEditor, "O arquivo já existe, deseja sobreescrever?",
+					if (JOptionPane.showConfirmDialog(jfImageEditor, "O arquivo jï¿½ existe, deseja sobreescrever?",
 							"Confirmar salvar como", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
 						return;
 					}
@@ -96,7 +95,6 @@ public class MenuFileActions {
 				try {
 					String format = fileChooser.getFileFilter().getDescription();
 					ImageIO.write(temp, format, file);
-					jfImageEditor.setTabTitle(filename);
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}

@@ -51,7 +51,7 @@ public class MenuFilterActions extends MenuBaseAction {
 				return;
 			}
 
-			BufferedImage temp = jfImageEditor.getImageTab();
+			BufferedImage temp = jfImageEditor.getImage();
 			ChannelFilter filter = new ChannelFilter(temp);
 
 			switch (action) {
@@ -66,7 +66,7 @@ public class MenuFilterActions extends MenuBaseAction {
 				break;
 			}
 
-			jfImageEditor.addImageTab(temp);
+			jfImageEditor.setImage(temp);
 		}
 
 	}
@@ -94,7 +94,7 @@ public class MenuFilterActions extends MenuBaseAction {
 				return;
 			}
 
-			BufferedImage temp = jfImageEditor.getImageTab();
+			BufferedImage temp = jfImageEditor.getImage();
 			ArithmeticFilter filter = new ArithmeticFilter(temp);
 
 			// constants
@@ -170,7 +170,7 @@ public class MenuFilterActions extends MenuBaseAction {
 			}
 			}
 
-			jfImageEditor.addImageTab(temp);
+			jfImageEditor.setImage(temp);
 		}
 
 	}
@@ -197,7 +197,7 @@ public class MenuFilterActions extends MenuBaseAction {
 				return;
 			}
 
-			BufferedImage temp = jfImageEditor.getImageTab();
+			BufferedImage temp = jfImageEditor.getImage();
 			BitwiseFilter filter = new BitwiseFilter(temp);
 
 			switch (action) {
@@ -246,7 +246,7 @@ public class MenuFilterActions extends MenuBaseAction {
 			}
 			}
 
-			jfImageEditor.addImageTab(temp);
+			jfImageEditor.setImage(temp);
 		}
 
 	}
@@ -269,7 +269,7 @@ public class MenuFilterActions extends MenuBaseAction {
 				return;
 			}
 
-			BufferedImage temp = jfImageEditor.getImageTab();
+			BufferedImage temp = jfImageEditor.getImage();
 			GrayscaleFilter filter = new GrayscaleFilter(temp);
 
 			switch (action) {
@@ -287,7 +287,7 @@ public class MenuFilterActions extends MenuBaseAction {
 			}
 			}
 
-			jfImageEditor.addImageTab(temp);
+			jfImageEditor.setImage(temp);
 		}
 
 	}
@@ -310,13 +310,12 @@ public class MenuFilterActions extends MenuBaseAction {
 				return;
 			}
 
-			BufferedImage temp = jfImageEditor.getImageTab();
+			BufferedImage temp = jfImageEditor.getImage();
 			ConvolutionFilter filter = new ConvolutionFilter(temp);
 
 			switch (action) {
 			case GENERIC: {
-				JConvolutionDialog jConvolutionMatrix = new JConvolutionDialog(jfImageEditor, "Matriz Convolução",
-						true);
+				JConvolutionDialog jConvolutionMatrix = new JConvolutionDialog(jfImageEditor, "Matriz Convoluï¿½ï¿½o");
 
 				Matrix matrix = jConvolutionMatrix.getMatrix();
 				if (matrix == null) {
@@ -339,7 +338,7 @@ public class MenuFilterActions extends MenuBaseAction {
 			}
 			}
 
-			jfImageEditor.addImageTab(temp);
+			jfImageEditor.setImage(temp);
 		}
 	}
 
@@ -349,7 +348,7 @@ public class MenuFilterActions extends MenuBaseAction {
 			return;
 		}
 
-		BufferedImage temp = jfImageEditor.getImageTab();
+		BufferedImage temp = jfImageEditor.getImage();
 
 		switch (action) {
 		case BLEND: {
@@ -396,7 +395,7 @@ public class MenuFilterActions extends MenuBaseAction {
 
 		}
 
-		jfImageEditor.addImageTab(temp);
+		jfImageEditor.setImage(temp);
 	}
 
 }

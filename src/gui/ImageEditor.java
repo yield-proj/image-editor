@@ -1,28 +1,16 @@
 package gui;
 
-import java.awt.Component;
-import java.awt.Frame;
 import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
+import javax.swing.*;
 import javax.swing.JPopupMenu.Separator;
-import javax.swing.JTabbedPane;
-import javax.swing.KeyStroke;
-import javax.swing.WindowConstants;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import gui.components.JScrollPaneImage;
-import gui.dialogs.JHistogramDialog;
 import gui.menu.MenuFileActions;
 import gui.menu.MenuFilterActions;
 import gui.menu.MenuFilterActions.Arithmetic;
@@ -32,358 +20,323 @@ import gui.menu.MenuFilterActions.Grayscale;
 import gui.menu.MenuFilterActions.Logic;
 import gui.menu.MenuGeometricActions;
 import gui.menu.MenuGeometricActions.Flip;
-import gui.menu.MenuViewActions;
 
 @SuppressWarnings("serial")
-public class ImageEditor extends JFrame {
-
-	private int id = 1;
-	private final JTabbedPane jImagesTab = new JTabbedPane();
-
-	public static JHistogramDialog jHistogram;
-	public JCheckBoxMenuItem jMenuViewHistogram;
-
-	public void addImageTab(BufferedImage image) {
-		addImageTab("Imagem", image);
-	}
-
-	public void addImageTab(String name, BufferedImage image) {
-		jImagesTab.add(name + "_" + (id++), new JScrollPaneImage(image));
-		jImagesTab.setSelectedIndex(jImagesTab.getTabCount() - 1);
-	}
-
-	public BufferedImage getImageTab() {
-		Component c = jImagesTab.getSelectedComponent();
-		if (c != null) {
-			JScrollPaneImage image = (JScrollPaneImage) c;
-			return image.getImage();
-		}
-		return null;
-	}
-
-	public JScrollPaneImage getJScrollPaneImageTab() {
-		Component c = jImagesTab.getSelectedComponent();
-		if (c != null) {
-			JScrollPaneImage image = (JScrollPaneImage) c;
-			return image;
-		}
-		return null;
-	}
-
-	public BufferedImage getImageTab(int i) {
-		try {
-			Component c = jImagesTab.getComponentAt(i);
-			JScrollPaneImage image = (JScrollPaneImage) c;
-			return image.getImage();
-		} catch (IndexOutOfBoundsException e) {
-		}
-		return null;
-	}
-
-	public void setTabTitle(String title) {
-		jImagesTab.setTitleAt(jImagesTab.getSelectedIndex(), title);
-	}
-
-	public ImageEditor() {
-		// frame properties
-		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-		setExtendedState(Frame.MAXIMIZED_BOTH);
-		setSize(800, 600);
-		setTitle("Image Editor");
-
-		// create menus
-		JMenuBar jMenuBar = new JMenuBar();
-		createMenus(jMenuBar);
-		setJMenuBar(jMenuBar);
-
-		// image tabs
-		jImagesTab.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mousePressed(MouseEvent e) {
-				super.mousePressed(e);
-				if (e.getButton() == MouseEvent.BUTTON2) {
-					int index = jImagesTab.getSelectedIndex();
-					if (index != -1) {
-						jImagesTab.remove(index);
-					}
-				}
-			}
-		});
-
-		// histogram
-		jImagesTab.addChangeListener(new ChangeListener() {
-
-			@Override
-			public void stateChanged(ChangeEvent arg0) {
-				jHistogram.draw(getJScrollPaneImageTab());
-				jHistogram.repaint();
-			}
-		});
-		add(jImagesTab);
-	}
-
-	public static void main(String[] args) {
-		ImageEditor jfImageEditor = new ImageEditor();
-		jfImageEditor.setVisible(true);
-		jHistogram = new JHistogramDialog(jfImageEditor);
-		jHistogram.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-	}
-
-	// create menu
-	private void createMenus(JMenuBar jMenuBar) {
-
-		// file
-		JMenu jMenuFile = new JMenu("Arquivo");
-
-		JMenuItem jMenuFileOpen = new JMenuItem("Abrir");
-		JMenuItem jMenuFileSave = new JMenuItem("Salvar como");
-		Separator jMenuFileSeparator = new JPopupMenu.Separator();
-		JMenuItem jMenuFileExit = new JMenuItem("Sair");
+public class ImageEditor extends JDialog {
+
+    private int id = 1;
+
+    private JScrollPaneImage imagePanel = null;
+
+    private List<BufferedImage> images = new ArrayList<>();
+    private int imageIndex = -1;
+
+    public void setImage(BufferedImage image) {
+        setImage(image, true);
+    }
+
+    public void setImage(BufferedImage image, boolean addToList) {
+        if (imagePanel == null) {
+            imagePanel = new JScrollPaneImage(image);
+            add(imagePanel);
+        } else
+            imagePanel.setImage(image);
+        if (addToList) {
+            while (imageIndex < images.size() - 1) {
+                images.removeLast();
+            }
+            images.add(image);
+            imageIndex++;
+        }
+        getRootPane().updateUI();
+    }
+
+    public boolean setImage(int index) {
+        if (index < 0 || index >= images.size())
+            return false;
+        setImage(images.get(index), false);
+        return true;
+    }
+
+    public BufferedImage getImage() {
+        return imagePanel.getImage();
+    }
+
+    public ImageEditor() {
+        // frame properties
+        setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+
+        setSize(800, 600);
+        setTitle("Image Editor");
+
+        // create menus
+        JMenuBar jMenuBar = new JMenuBar();
+        createMenus(jMenuBar);
+        setJMenuBar(jMenuBar);
+    }
+
+    public static void main(String[] args) {
+        ImageEditor jfImageEditor = new ImageEditor();
+        jfImageEditor.setVisible(true);
+    }
+
+    // create menu
+    private void createMenus(JMenuBar jMenuBar) {
+
+        // file
+        JMenu jMenuFile = new JMenu("File");
+
+        JMenuItem jMenuFileOpen = new JMenuItem("Open");
+        JMenuItem jMenuFileSave = new JMenuItem("Save as...");
+
+        MenuFileActions menuFileActions = new MenuFileActions(this);
+        jMenuFileOpen.addActionListener(menuFileActions.new OpenAction());
+        jMenuFileSave.addActionListener(menuFileActions.new SaveAsAction());
+
+        jMenuFileOpen.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK));
+        jMenuFileSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
+
+        jMenuBar.add(jMenuFile);
+        jMenuFile.add(jMenuFileOpen);
+        jMenuFile.add(jMenuFileSave);
+
+        //edit
+        JMenu editMenu = new JMenu("Edit");
+        editMenu.setMnemonic('E');
+
+        JMenuItem undoItem = new JMenuItem(new AbstractAction("Undo") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (setImage(imageIndex - 1)) imageIndex--;
+            }
+        });
+        undoItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK));
+        editMenu.add(undoItem);
+
+
+        JMenuItem redoItem = new JMenuItem(new AbstractAction("Redo") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (setImage(imageIndex + 1)) imageIndex++;
+            }
+        });
+        redoItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Y, InputEvent.CTRL_DOWN_MASK));
+        editMenu.add(redoItem);
+
+        jMenuBar.add(editMenu);
 
-		MenuFileActions menuFileActions = new MenuFileActions(this);
-		jMenuFileOpen.addActionListener(menuFileActions.new OpenAction());
-		jMenuFileSave.addActionListener(menuFileActions.new SaveAsAction());
-		jMenuFileExit.addActionListener(menuFileActions.new ExitAction());
 
-		jMenuFileOpen.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, ActionEvent.CTRL_MASK));
-		jMenuFileSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.CTRL_MASK));
+        // filters
+        JMenu jMenuFilters = new JMenu("Filters");
 
-		jMenuBar.add(jMenuFile);
-		jMenuFile.add(jMenuFileOpen);
-		jMenuFile.add(jMenuFileSave);
-		jMenuFile.add(jMenuFileSeparator);
-		jMenuFile.add(jMenuFileExit);
+        MenuFilterActions menuFilterActions = new MenuFilterActions(this);
 
-		// view
-		JMenu jMenuView = new JMenu("Exibir");
+        // filter -> arithmetic
+        JMenu jMenuFiltersArithmetic = new JMenu("Aritmï¿½tico");
 
-		jMenuViewHistogram = new JCheckBoxMenuItem("Histograma");
+        // filter -> arithmetic -> add
+        JMenu jMenuFiltersArithmeticAdd = new JMenu("Soma");
+        JMenuItem jMenuFiltersArithmeticAddConst = new JMenuItem("Constante");
+        JMenuItem jMenuFiltersArithmeticAddImage = new JMenuItem("Imagem");
 
-		MenuViewActions menuViewActions = new MenuViewActions(this);
-		jMenuViewHistogram.addActionListener(menuViewActions.new HistogramAction());
+        jMenuFiltersArithmeticAddConst.addActionListener(menuFilterActions.new Arithmetic(Arithmetic.ADDITION_CONST));
+        jMenuFiltersArithmeticAddImage.addActionListener(menuFilterActions.new Arithmetic(Arithmetic.ADDITION_IMAGE));
 
-		jMenuBar.add(jMenuView);
-		jMenuView.add(jMenuViewHistogram);
+        jMenuFiltersArithmeticAdd.add(jMenuFiltersArithmeticAddConst);
+        jMenuFiltersArithmeticAdd.add(jMenuFiltersArithmeticAddImage);
+        jMenuFiltersArithmetic.add(jMenuFiltersArithmeticAdd);
 
-		// filters
-		JMenu jMenuFilters = new JMenu("Filtros");
+        // filter -> arithmetic -> sub
+        JMenu jMenuFiltersArithmeticSub = new JMenu("Subtraï¿½ï¿½o");
+        JMenuItem jMenuFiltersArithmeticSubConst = new JMenuItem("Constante");
+        JMenuItem jMenuFiltersArithmeticSubImage = new JMenuItem("Imagem");
 
-		MenuFilterActions menuFilterActions = new MenuFilterActions(this);
+        jMenuFiltersArithmeticSubConst
+                .addActionListener(menuFilterActions.new Arithmetic(Arithmetic.SUBTRACTION_CONST));
+        jMenuFiltersArithmeticSubImage
+                .addActionListener(menuFilterActions.new Arithmetic(Arithmetic.SUBTRACTION_IMAGE));
 
-		// filter -> arithmetic
-		JMenu jMenuFiltersArithmetic = new JMenu("Aritmético");
+        jMenuFiltersArithmeticSub.add(jMenuFiltersArithmeticSubConst);
+        jMenuFiltersArithmeticSub.add(jMenuFiltersArithmeticSubImage);
+        jMenuFiltersArithmetic.add(jMenuFiltersArithmeticSub);
 
-		// filter -> arithmetic -> add
-		JMenu jMenuFiltersArithmeticAdd = new JMenu("Soma");
-		JMenuItem jMenuFiltersArithmeticAddConst = new JMenuItem("Constante");
-		JMenuItem jMenuFiltersArithmeticAddImage = new JMenuItem("Imagem");
+        // filter -> arithmetic -> mul
+        JMenu jMenuFiltersArithmeticMul = new JMenu("Multiplicaï¿½ï¿½o");
+        JMenuItem jMenuFiltersArithmeticMulConst = new JMenuItem("Constante");
+        JMenuItem jMenuFiltersArithmeticMulImage = new JMenuItem("Imagem");
 
-		jMenuFiltersArithmeticAddConst.addActionListener(menuFilterActions.new Arithmetic(Arithmetic.ADDITION_CONST));
-		jMenuFiltersArithmeticAddImage.addActionListener(menuFilterActions.new Arithmetic(Arithmetic.ADDITION_IMAGE));
+        jMenuFiltersArithmeticMulConst
+                .addActionListener(menuFilterActions.new Arithmetic(Arithmetic.MULTIPLICATION_CONST));
+        jMenuFiltersArithmeticMulImage
+                .addActionListener(menuFilterActions.new Arithmetic(Arithmetic.MULTIPLICATION_IMAGE));
 
-		jMenuFiltersArithmeticAdd.add(jMenuFiltersArithmeticAddConst);
-		jMenuFiltersArithmeticAdd.add(jMenuFiltersArithmeticAddImage);
-		jMenuFiltersArithmetic.add(jMenuFiltersArithmeticAdd);
+        jMenuFiltersArithmeticMul.add(jMenuFiltersArithmeticMulConst);
+        jMenuFiltersArithmeticMul.add(jMenuFiltersArithmeticMulImage);
+        jMenuFiltersArithmetic.add(jMenuFiltersArithmeticMul);
 
-		// filter -> arithmetic -> sub
-		JMenu jMenuFiltersArithmeticSub = new JMenu("Subtração");
-		JMenuItem jMenuFiltersArithmeticSubConst = new JMenuItem("Constante");
-		JMenuItem jMenuFiltersArithmeticSubImage = new JMenuItem("Imagem");
+        // filter -> arithmetic -> div
+        JMenu jMenuFiltersArithmeticDiv = new JMenu("Divisï¿½o");
+        JMenuItem jMenuFiltersArithmeticDivConst = new JMenuItem("Constante");
+        JMenuItem jMenuFiltersArithmeticDivImage = new JMenuItem("Imagem");
 
-		jMenuFiltersArithmeticSubConst
-				.addActionListener(menuFilterActions.new Arithmetic(Arithmetic.SUBTRACTION_CONST));
-		jMenuFiltersArithmeticSubImage
-				.addActionListener(menuFilterActions.new Arithmetic(Arithmetic.SUBTRACTION_IMAGE));
+        jMenuFiltersArithmeticDivConst.addActionListener(menuFilterActions.new Arithmetic(Arithmetic.DIVISION_CONST));
+        jMenuFiltersArithmeticDivImage.addActionListener(menuFilterActions.new Arithmetic(Arithmetic.DIVISION_IMAGE));
 
-		jMenuFiltersArithmeticSub.add(jMenuFiltersArithmeticSubConst);
-		jMenuFiltersArithmeticSub.add(jMenuFiltersArithmeticSubImage);
-		jMenuFiltersArithmetic.add(jMenuFiltersArithmeticSub);
+        jMenuFiltersArithmeticDiv.add(jMenuFiltersArithmeticDivConst);
+        jMenuFiltersArithmeticDiv.add(jMenuFiltersArithmeticDivImage);
+        jMenuFiltersArithmetic.add(jMenuFiltersArithmeticDiv);
 
-		// filter -> arithmetic -> mul
-		JMenu jMenuFiltersArithmeticMul = new JMenu("Multiplicação");
-		JMenuItem jMenuFiltersArithmeticMulConst = new JMenuItem("Constante");
-		JMenuItem jMenuFiltersArithmeticMulImage = new JMenuItem("Imagem");
+        jMenuFilters.add(jMenuFiltersArithmetic);
 
-		jMenuFiltersArithmeticMulConst
-				.addActionListener(menuFilterActions.new Arithmetic(Arithmetic.MULTIPLICATION_CONST));
-		jMenuFiltersArithmeticMulImage
-				.addActionListener(menuFilterActions.new Arithmetic(Arithmetic.MULTIPLICATION_IMAGE));
+        // filter -> channel
+        JMenu jMenuFiltersChannel = new JMenu("Canal");
 
-		jMenuFiltersArithmeticMul.add(jMenuFiltersArithmeticMulConst);
-		jMenuFiltersArithmeticMul.add(jMenuFiltersArithmeticMulImage);
-		jMenuFiltersArithmetic.add(jMenuFiltersArithmeticMul);
+        JMenuItem jMenuFiltersChannelRed = new JMenuItem("Vermelho");
+        JMenuItem jMenuFiltersChannelGreen = new JMenuItem("Verde");
+        JMenuItem jMenuFiltersChannelBlue = new JMenuItem("Azul");
 
-		// filter -> arithmetic -> div
-		JMenu jMenuFiltersArithmeticDiv = new JMenu("Divisão");
-		JMenuItem jMenuFiltersArithmeticDivConst = new JMenuItem("Constante");
-		JMenuItem jMenuFiltersArithmeticDivImage = new JMenuItem("Imagem");
+        jMenuFiltersChannelRed.addActionListener(menuFilterActions.new Channel(Channel.RED));
+        jMenuFiltersChannelGreen.addActionListener(menuFilterActions.new Channel(Channel.GREEN));
+        jMenuFiltersChannelBlue.addActionListener(menuFilterActions.new Channel(Channel.BLUE));
 
-		jMenuFiltersArithmeticDivConst.addActionListener(menuFilterActions.new Arithmetic(Arithmetic.DIVISION_CONST));
-		jMenuFiltersArithmeticDivImage.addActionListener(menuFilterActions.new Arithmetic(Arithmetic.DIVISION_IMAGE));
+        jMenuFiltersChannel.add(jMenuFiltersChannelRed);
+        jMenuFiltersChannel.add(jMenuFiltersChannelGreen);
+        jMenuFiltersChannel.add(jMenuFiltersChannelBlue);
 
-		jMenuFiltersArithmeticDiv.add(jMenuFiltersArithmeticDivConst);
-		jMenuFiltersArithmeticDiv.add(jMenuFiltersArithmeticDivImage);
-		jMenuFiltersArithmetic.add(jMenuFiltersArithmeticDiv);
+        jMenuFilters.add(jMenuFiltersChannel);
 
-		jMenuFilters.add(jMenuFiltersArithmetic);
+        // filter -> logic
+        JMenu jMenuFiltersLogic = new JMenu("Lï¿½gico");
 
-		// filter -> channel
-		JMenu jMenuFiltersChannel = new JMenu("Canal");
+        // filter -> logic -> and
+        JMenu jMenuFiltersLogicAnd = new JMenu("E");
+        JMenuItem jMenuFiltersLogicAndConst = new JMenuItem("Constante");
+        JMenuItem jMenuFiltersLogicAndImage = new JMenuItem("Imagem");
 
-		JMenuItem jMenuFiltersChannelRed = new JMenuItem("Vermelho");
-		JMenuItem jMenuFiltersChannelGreen = new JMenuItem("Verde");
-		JMenuItem jMenuFiltersChannelBlue = new JMenuItem("Azul");
+        jMenuFiltersLogicAndConst.addActionListener(menuFilterActions.new Logic(Logic.AND_CONST));
+        jMenuFiltersLogicAndImage.addActionListener(menuFilterActions.new Logic(Logic.AND_IMAGE));
 
-		jMenuFiltersChannelRed.addActionListener(menuFilterActions.new Channel(Channel.RED));
-		jMenuFiltersChannelGreen.addActionListener(menuFilterActions.new Channel(Channel.GREEN));
-		jMenuFiltersChannelBlue.addActionListener(menuFilterActions.new Channel(Channel.BLUE));
+        jMenuFiltersLogicAnd.add(jMenuFiltersLogicAndConst);
+        jMenuFiltersLogicAnd.add(jMenuFiltersLogicAndImage);
+        jMenuFiltersLogic.add(jMenuFiltersLogicAnd);
 
-		jMenuFiltersChannel.add(jMenuFiltersChannelRed);
-		jMenuFiltersChannel.add(jMenuFiltersChannelGreen);
-		jMenuFiltersChannel.add(jMenuFiltersChannelBlue);
+        // filter -> logic -> or
+        JMenu jMenuFiltersLogicOr = new JMenu("Ou");
+        JMenuItem jMenuFiltersLogicOrConst = new JMenuItem("Constante");
+        JMenuItem jMenuFiltersLogicOrImage = new JMenuItem("Imagem");
 
-		jMenuFilters.add(jMenuFiltersChannel);
+        jMenuFiltersLogicOrConst.addActionListener(menuFilterActions.new Logic(Logic.OR_CONST));
+        jMenuFiltersLogicOrImage.addActionListener(menuFilterActions.new Logic(Logic.OR_IMAGE));
 
-		// filter -> logic
-		JMenu jMenuFiltersLogic = new JMenu("Lógico");
+        jMenuFiltersLogicOr.add(jMenuFiltersLogicOrConst);
+        jMenuFiltersLogicOr.add(jMenuFiltersLogicOrImage);
+        jMenuFiltersLogic.add(jMenuFiltersLogicOr);
 
-		// filter -> logic -> and
-		JMenu jMenuFiltersLogicAnd = new JMenu("E");
-		JMenuItem jMenuFiltersLogicAndConst = new JMenuItem("Constante");
-		JMenuItem jMenuFiltersLogicAndImage = new JMenuItem("Imagem");
+        // filter -> logic -> not
+        JMenuItem jMenuFiltersLogicNot = new JMenuItem("Negaï¿½ï¿½o");
+        jMenuFiltersLogicNot.addActionListener(menuFilterActions.new Logic(Logic.NOT));
+        jMenuFiltersLogic.add(jMenuFiltersLogicNot);
 
-		jMenuFiltersLogicAndConst.addActionListener(menuFilterActions.new Logic(Logic.AND_CONST));
-		jMenuFiltersLogicAndImage.addActionListener(menuFilterActions.new Logic(Logic.AND_IMAGE));
+        // filter -> logic -> xor
+        JMenu jMenuFiltersLogicXor = new JMenu("Ou lï¿½gico");
+        JMenuItem jMenuFiltersLogicXorConst = new JMenuItem("Constante");
+        JMenuItem jMenuFiltersLogicXorImage = new JMenuItem("Imagem");
 
-		jMenuFiltersLogicAnd.add(jMenuFiltersLogicAndConst);
-		jMenuFiltersLogicAnd.add(jMenuFiltersLogicAndImage);
-		jMenuFiltersLogic.add(jMenuFiltersLogicAnd);
+        jMenuFiltersLogicXorConst.addActionListener(menuFilterActions.new Logic(Logic.XOR_CONST));
+        jMenuFiltersLogicXorImage.addActionListener(menuFilterActions.new Logic(Logic.XOR_IMAGE));
 
-		// filter -> logic -> or
-		JMenu jMenuFiltersLogicOr = new JMenu("Ou");
-		JMenuItem jMenuFiltersLogicOrConst = new JMenuItem("Constante");
-		JMenuItem jMenuFiltersLogicOrImage = new JMenuItem("Imagem");
+        jMenuFiltersLogicXor.add(jMenuFiltersLogicXorConst);
+        jMenuFiltersLogicXor.add(jMenuFiltersLogicXorImage);
+        jMenuFiltersLogic.add(jMenuFiltersLogicXor);
 
-		jMenuFiltersLogicOrConst.addActionListener(menuFilterActions.new Logic(Logic.OR_CONST));
-		jMenuFiltersLogicOrImage.addActionListener(menuFilterActions.new Logic(Logic.OR_IMAGE));
+        jMenuFilters.add(jMenuFiltersLogic);
 
-		jMenuFiltersLogicOr.add(jMenuFiltersLogicOrConst);
-		jMenuFiltersLogicOr.add(jMenuFiltersLogicOrImage);
-		jMenuFiltersLogic.add(jMenuFiltersLogicOr);
+        // filters -> grayscale
+        JMenu jMenuFiltersGrayscale = new JMenu("Nï¿½vel de cinza");
 
-		// filter -> logic -> not
-		JMenuItem jMenuFiltersLogicNot = new JMenuItem("Negação");
-		jMenuFiltersLogicNot.addActionListener(menuFilterActions.new Logic(Logic.NOT));
-		jMenuFiltersLogic.add(jMenuFiltersLogicNot);
+        JMenuItem jMenuFiltersGrayscaleAverage = new JMenuItem("Mï¿½dia");
+        JMenuItem jMenuFiltersGrayscaleSDTV = new JMenuItem("SDTV");
+        JMenuItem jMenuFiltersGrayscaleHDTV = new JMenuItem("HDTV");
 
-		// filter -> logic -> xor
-		JMenu jMenuFiltersLogicXor = new JMenu("Ou lógico");
-		JMenuItem jMenuFiltersLogicXorConst = new JMenuItem("Constante");
-		JMenuItem jMenuFiltersLogicXorImage = new JMenuItem("Imagem");
+        jMenuFiltersGrayscaleAverage.addActionListener(menuFilterActions.new Grayscale(Grayscale.AVERAGE));
+        jMenuFiltersGrayscaleSDTV.addActionListener(menuFilterActions.new Grayscale(Grayscale.SDTV));
+        jMenuFiltersGrayscaleHDTV.addActionListener(menuFilterActions.new Grayscale(Grayscale.HDTV));
 
-		jMenuFiltersLogicXorConst.addActionListener(menuFilterActions.new Logic(Logic.XOR_CONST));
-		jMenuFiltersLogicXorImage.addActionListener(menuFilterActions.new Logic(Logic.XOR_IMAGE));
+        jMenuFiltersGrayscale.add(jMenuFiltersGrayscaleAverage);
+        jMenuFiltersGrayscale.add(jMenuFiltersGrayscaleSDTV);
+        jMenuFiltersGrayscale.add(jMenuFiltersGrayscaleHDTV);
 
-		jMenuFiltersLogicXor.add(jMenuFiltersLogicXorConst);
-		jMenuFiltersLogicXor.add(jMenuFiltersLogicXorImage);
-		jMenuFiltersLogic.add(jMenuFiltersLogicXor);
+        jMenuFilters.add(jMenuFiltersGrayscale);
 
-		jMenuFilters.add(jMenuFiltersLogic);
+        // filters -> convolution
+        JMenu jMenuFiltersConvolution = new JMenu("Convoluï¿½ï¿½o");
 
-		// filters -> grayscale
-		JMenu jMenuFiltersGrayscale = new JMenu("Nível de cinza");
+        JMenuItem jMenuFiltersConvolutionGeneric = new JMenuItem("Genï¿½rica");
+        JMenuItem jMenuFiltersConvolutionRoberts = new JMenuItem("Roberts");
+        JMenuItem jMenuFiltersConvolutionSobel = new JMenuItem("Sobel");
 
-		JMenuItem jMenuFiltersGrayscaleAverage = new JMenuItem("Média");
-		JMenuItem jMenuFiltersGrayscaleSDTV = new JMenuItem("SDTV");
-		JMenuItem jMenuFiltersGrayscaleHDTV = new JMenuItem("HDTV");
+        jMenuFiltersConvolutionGeneric.addActionListener(menuFilterActions.new Convolution(Convolution.GENERIC));
+        jMenuFiltersConvolutionRoberts.addActionListener(menuFilterActions.new Convolution(Convolution.ROBERTS));
+        jMenuFiltersConvolutionSobel.addActionListener(menuFilterActions.new Convolution(Convolution.SOBEL));
 
-		jMenuFiltersGrayscaleAverage.addActionListener(menuFilterActions.new Grayscale(Grayscale.AVERAGE));
-		jMenuFiltersGrayscaleSDTV.addActionListener(menuFilterActions.new Grayscale(Grayscale.SDTV));
-		jMenuFiltersGrayscaleHDTV.addActionListener(menuFilterActions.new Grayscale(Grayscale.HDTV));
+        jMenuFiltersConvolution.add(jMenuFiltersConvolutionGeneric);
+        jMenuFiltersConvolution.add(jMenuFiltersConvolutionRoberts);
+        jMenuFiltersConvolution.add(jMenuFiltersConvolutionSobel);
 
-		jMenuFiltersGrayscale.add(jMenuFiltersGrayscaleAverage);
-		jMenuFiltersGrayscale.add(jMenuFiltersGrayscaleSDTV);
-		jMenuFiltersGrayscale.add(jMenuFiltersGrayscaleHDTV);
+        jMenuFilters.add(jMenuFiltersConvolution);
 
-		jMenuFilters.add(jMenuFiltersGrayscale);
+        // filters
+        JMenuItem jMenuFiltersBlend = new JMenuItem("Blend");
+        jMenuFiltersBlend.addActionListener(new MenuFilterActions(this, MenuFilterActions.BLEND));
+        jMenuFilters.add(jMenuFiltersBlend);
 
-		// filters -> convolution
-		JMenu jMenuFiltersConvolution = new JMenu("Convolução");
+        JMenuItem jMenuFiltersSearch = new JMenuItem("Busca");
+        jMenuFiltersSearch.addActionListener(new MenuFilterActions(this, MenuFilterActions.SEARCH));
+        jMenuFilters.add(jMenuFiltersSearch);
 
-		JMenuItem jMenuFiltersConvolutionGeneric = new JMenuItem("Genérica");
-		JMenuItem jMenuFiltersConvolutionRoberts = new JMenuItem("Roberts");
-		JMenuItem jMenuFiltersConvolutionSobel = new JMenuItem("Sobel");
+        JMenuItem jMenuFiltersThreshold = new JMenuItem("Limiar");
+        jMenuFiltersThreshold.addActionListener(new MenuFilterActions(this, MenuFilterActions.THRESHOULD));
+        jMenuFilters.add(jMenuFiltersThreshold);
 
-		jMenuFiltersConvolutionGeneric.addActionListener(menuFilterActions.new Convolution(Convolution.GENERIC));
-		jMenuFiltersConvolutionRoberts.addActionListener(menuFilterActions.new Convolution(Convolution.ROBERTS));
-		jMenuFiltersConvolutionSobel.addActionListener(menuFilterActions.new Convolution(Convolution.SOBEL));
+        JMenuItem jMenuFiltersMedian = new JMenuItem("Mediana");
+        jMenuFiltersMedian.addActionListener(new MenuFilterActions(this, MenuFilterActions.MEDIAN));
+        jMenuFilters.add(jMenuFiltersMedian);
 
-		jMenuFiltersConvolution.add(jMenuFiltersConvolutionGeneric);
-		jMenuFiltersConvolution.add(jMenuFiltersConvolutionRoberts);
-		jMenuFiltersConvolution.add(jMenuFiltersConvolutionSobel);
+        jMenuBar.add(jMenuFilters);
 
-		jMenuFilters.add(jMenuFiltersConvolution);
+        // geometric
+        JMenu jMenuGeometric = new JMenu("Geomï¿½trico");
 
-		// filters
-		JMenuItem jMenuFiltersBlend = new JMenuItem("Blend");
-		jMenuFiltersBlend.addActionListener(new MenuFilterActions(this, MenuFilterActions.BLEND));
-		jMenuFilters.add(jMenuFiltersBlend);
+        MenuGeometricActions menuGeometricActions = new MenuGeometricActions(this);
 
-		JMenuItem jMenuFiltersSearch = new JMenuItem("Busca");
-		jMenuFiltersSearch.addActionListener(new MenuFilterActions(this, MenuFilterActions.SEARCH));
-		jMenuFilters.add(jMenuFiltersSearch);
+        JMenuItem jMenuGeometricTranslation = new JMenuItem("Translaï¿½ï¿½o");
+        JMenuItem jMenuGeometricRotation = new JMenuItem("Rotaï¿½ï¿½o");
+        JMenuItem jMenuGeometricScale = new JMenuItem("Escala");
 
-		JMenuItem jMenuFiltersThreshold = new JMenuItem("Limiar");
-		jMenuFiltersThreshold.addActionListener(new MenuFilterActions(this, MenuFilterActions.THRESHOULD));
-		jMenuFilters.add(jMenuFiltersThreshold);
+        jMenuGeometricTranslation.addActionListener(new MenuGeometricActions(this, MenuGeometricActions.TRANSLATION));
+        jMenuGeometricRotation.addActionListener(new MenuGeometricActions(this, MenuGeometricActions.ROTATION));
+        jMenuGeometricScale.addActionListener(new MenuGeometricActions(this, MenuGeometricActions.SCALE));
 
-		JMenuItem jMenuFiltersMedian = new JMenuItem("Mediana");
-		jMenuFiltersMedian.addActionListener(new MenuFilterActions(this, MenuFilterActions.MEDIAN));
-		jMenuFilters.add(jMenuFiltersMedian);
+        jMenuGeometric.add(jMenuGeometricTranslation);
+        jMenuGeometric.add(jMenuGeometricRotation);
+        jMenuGeometric.add(jMenuGeometricScale);
 
-		jMenuBar.add(jMenuFilters);
+        // menu -> geometric -> mirror
+        JMenu jMenuGeometricMirror = new JMenu("Espelhamento");
 
-		// geometric
-		JMenu jMenuGeometric = new JMenu("Geométrico");
+        JMenuItem jMenuGeometricMirrorHorizontal = new JMenuItem("Horizontal");
+        JMenuItem jMenuGeometricMirrorVertical = new JMenuItem("Vertical");
 
-		MenuGeometricActions menuGeometricActions = new MenuGeometricActions(this);
+        jMenuGeometricMirrorHorizontal.addActionListener(menuGeometricActions.new Flip(Flip.HORIZONTAL));
+        jMenuGeometricMirrorVertical.addActionListener(menuGeometricActions.new Flip(Flip.VERTICAL));
 
-		JMenuItem jMenuGeometricTranslation = new JMenuItem("Translação");
-		JMenuItem jMenuGeometricRotation = new JMenuItem("Rotação");
-		JMenuItem jMenuGeometricScale = new JMenuItem("Escala");
+        jMenuGeometricMirror.add(jMenuGeometricMirrorHorizontal);
+        jMenuGeometricMirror.add(jMenuGeometricMirrorVertical);
 
-		jMenuGeometricTranslation.addActionListener(new MenuGeometricActions(this, MenuGeometricActions.TRANSLATION));
-		jMenuGeometricRotation.addActionListener(new MenuGeometricActions(this, MenuGeometricActions.ROTATION));
-		jMenuGeometricScale.addActionListener(new MenuGeometricActions(this, MenuGeometricActions.SCALE));
+        jMenuGeometric.add(jMenuGeometricMirror);
 
-		jMenuGeometric.add(jMenuGeometricTranslation);
-		jMenuGeometric.add(jMenuGeometricRotation);
-		jMenuGeometric.add(jMenuGeometricScale);
+        jMenuBar.add(jMenuGeometric);
 
-		// menu -> geometric -> mirror
-		JMenu jMenuGeometricMirror = new JMenu("Espelhamento");
-
-		JMenuItem jMenuGeometricMirrorHorizontal = new JMenuItem("Horizontal");
-		JMenuItem jMenuGeometricMirrorVertical = new JMenuItem("Vertical");
-
-		jMenuGeometricMirrorHorizontal.addActionListener(menuGeometricActions.new Flip(Flip.HORIZONTAL));
-		jMenuGeometricMirrorVertical.addActionListener(menuGeometricActions.new Flip(Flip.VERTICAL));
-
-		jMenuGeometricMirror.add(jMenuGeometricMirrorHorizontal);
-		jMenuGeometricMirror.add(jMenuGeometricMirrorVertical);
-
-		jMenuGeometric.add(jMenuGeometricMirror);
-
-		jMenuBar.add(jMenuGeometric);
-
-	}
-
-	// view -> histogram
-	public boolean toogleHistogram() {
-		boolean visible = !jHistogram.isVisible();
-		jMenuViewHistogram.setSelected(visible);
-		jHistogram.setVisible(visible);
-		return visible;
-	}
+    }
 
 }

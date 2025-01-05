@@ -25,7 +25,7 @@ public abstract class MenuBaseAction extends AbstractAction {
 	}
 
 	protected boolean isValidTab() {
-		return jfImageEditor.getImageTab() != null ? true : false;
+		return jfImageEditor.getImage() != null ? true : false;
 	}
 
 	protected double promptDouble() {
@@ -62,22 +62,7 @@ public abstract class MenuBaseAction extends AbstractAction {
 	}
 
 	protected BufferedImage promptImage() {
-		String input = JOptionPane.showInputDialog("Digite o número da aba:");
-
-		// cancel
-		if (input == null) {
-			return null;
-		}
-
-		// parse number
-		int number;
-		try {
-			number = Integer.parseInt(input);
-		} catch (NumberFormatException e) {
-			number = 1;
-		}
-
-		return jfImageEditor.getImageTab(number - 1);
+		return jfImageEditor.getImage();
 	}
 
 	protected int promptInteger() {
@@ -137,7 +122,7 @@ public abstract class MenuBaseAction extends AbstractAction {
 	}
 
 	protected double promptNumberDegree() {
-		String input = JOptionPane.showInputDialog("Digite o ângulo (sentido horário):", 0);
+		String input = JOptionPane.showInputDialog("Digite o ï¿½ngulo (sentido horï¿½rio):", 0);
 
 		// cancel
 		if (input == null) {

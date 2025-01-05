@@ -40,7 +40,7 @@ public class MenuGeometricActions extends MenuBaseAction {
 				return;
 			}
 
-			BufferedImage temp = jfImageEditor.getImageTab();
+			BufferedImage temp = jfImageEditor.getImage();
 			GeometricFilter filter = new GeometricFilter(temp);
 
 			switch (action) {
@@ -54,7 +54,7 @@ public class MenuGeometricActions extends MenuBaseAction {
 			}
 			}
 
-			jfImageEditor.addImageTab(temp);
+			jfImageEditor.setImage(temp);
 		}
 
 	}
@@ -65,7 +65,7 @@ public class MenuGeometricActions extends MenuBaseAction {
 			return;
 		}
 
-		BufferedImage temp = jfImageEditor.getImageTab();
+		BufferedImage temp = jfImageEditor.getImage();
 		GeometricFilter filter = new GeometricFilter(temp);
 
 		switch (action) {
@@ -86,7 +86,7 @@ public class MenuGeometricActions extends MenuBaseAction {
 		}
 		}
 
-		jfImageEditor.addImageTab(temp);
+		jfImageEditor.setImage(temp);
 	}
 
 }
