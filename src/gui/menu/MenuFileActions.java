@@ -31,9 +31,6 @@ public class MenuFileActions {
 			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			fileChooser.setMultiSelectionEnabled(true);
 
-			// set current working directory
-			fileChooser.setCurrentDirectory(new File(".\\data\\"));
-
 			// open action
 			if (fileChooser.showOpenDialog(jfImageEditor) == JFileChooser.APPROVE_OPTION) {
 				for (File file : fileChooser.getSelectedFiles())
@@ -41,6 +38,7 @@ public class MenuFileActions {
 						BufferedImage img = ImageIO.read(file);
 						if (img != null) {
 							jfImageEditor.setImage(img);
+							jfImageEditor.setFile(file);
 						} else {
 							JOptionPane.showMessageDialog(jfImageEditor, "N�o foi poss�vel abrir o arquivo!",
 									"Formato inv�lido", JOptionPane.ERROR_MESSAGE);
@@ -57,50 +55,77 @@ public class MenuFileActions {
 	public class SaveAsAction extends AbstractAction {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			// no image
+			saveAs();
+		}
+	}
+	public void saveAs() {
+		// no image
+		BufferedImage temp = jfImageEditor.getImage();
+		if (temp == null) {
+			return;
+		}
+
+		JFileChooser fileChooser = new JFileChooser();
+		fileChooser.setAcceptAllFileFilterUsed(false);
+		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("bmp", "bmp"));
+		fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("gif", "gif"));
+		fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("jpg", "jpg"));
+		fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("png", "png"));
+
+		// save action
+		if (fileChooser.showSaveDialog(jfImageEditor) == JFileChooser.APPROVE_OPTION) {
+
+			File file = fileChooser.getSelectedFile();
+			String filename = file.getName();
+			String extension = "." + fileChooser.getFileFilter().getDescription();
+
+			// check if need to append extension
+			if (!filename.endsWith(extension)) {
+				file = new File(file + extension);
+			}
+
+			// check if file already exists
+			if (file.exists()) {
+				if (JOptionPane.showConfirmDialog(jfImageEditor, "O arquivo j� existe, deseja sobreescrever?",
+						"Confirmar salvar como", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
+					return;
+				}
+			}
+
+			// save it
+			try {
+				String format = fileChooser.getFileFilter().getDescription();
+				ImageIO.write(temp, format, file);
+				jfImageEditor.setFile(file);
+			} catch (IOException e1) {
+				throw new RuntimeException(e1);
+			}
+		}
+	}
+
+	public class SaveAction extends AbstractAction {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if(jfImageEditor.getFile() == null) {
+				saveAs();
+				return;
+			}
+
 			BufferedImage temp = jfImageEditor.getImage();
 			if (temp == null) {
 				return;
 			}
 
-			JFileChooser fileChooser = new JFileChooser();
-			fileChooser.setAcceptAllFileFilterUsed(false);
-			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("bmp", "bmp"));
-			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("gif", "gif"));
-			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("jpg", "jpg"));
-			fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("png", "png"));
+			String[] f = jfImageEditor.getFile().getName().split("\\.");
+			String ext = f[f.length - 1].toUpperCase();
 
-			// save action
-			if (fileChooser.showSaveDialog(jfImageEditor) == JFileChooser.APPROVE_OPTION) {
-
-				File file = fileChooser.getSelectedFile();
-				String filename = file.getName();
-				String extension = "." + fileChooser.getFileFilter().getDescription();
-
-				// check if need to append extension
-				if (!filename.endsWith(extension)) {
-					file = new File(file + extension);
-				}
-
-				// check if file already exists
-				if (file.exists()) {
-					if (JOptionPane.showConfirmDialog(jfImageEditor, "O arquivo j� existe, deseja sobreescrever?",
-							"Confirmar salvar como", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
-						return;
-					}
-				}
-
-				// save it
-				try {
-					String format = fileChooser.getFileFilter().getDescription();
-					ImageIO.write(temp, format, file);
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
-			}
-
-		}
+            try {
+                ImageIO.write(temp, ext, jfImageEditor.getFile());
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
 	}
 
 	@SuppressWarnings("serial")

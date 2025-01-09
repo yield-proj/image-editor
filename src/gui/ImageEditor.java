@@ -1,14 +1,17 @@
 package gui;
 
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.JPopupMenu.Separator;
 
 import gui.components.JScrollPaneImage;
 import gui.menu.MenuFileActions;
@@ -30,6 +33,7 @@ public class ImageEditor extends JDialog {
 
     private List<BufferedImage> images = new ArrayList<>();
     private int imageIndex = -1;
+    private File file;
 
     public void setImage(BufferedImage image) {
         setImage(image, true);
@@ -62,21 +66,33 @@ public class ImageEditor extends JDialog {
         return imagePanel.getImage();
     }
 
-    public ImageEditor() {
+    public ImageEditor(Window window, File file) {
+        super(window);
+        setModal(true);
         // frame properties
-        setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
         setSize(800, 600);
+        setLocationRelativeTo(window);
         setTitle("Image Editor");
 
         // create menus
         JMenuBar jMenuBar = new JMenuBar();
         createMenus(jMenuBar);
         setJMenuBar(jMenuBar);
+
+        if (file != null) {
+            try {
+                setImage(ImageIO.read(file));
+                setFile(file);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public static void main(String[] args) {
-        ImageEditor jfImageEditor = new ImageEditor();
+        ImageEditor jfImageEditor = new ImageEditor(null, null);
         jfImageEditor.setVisible(true);
     }
 
@@ -87,18 +103,22 @@ public class ImageEditor extends JDialog {
         JMenu jMenuFile = new JMenu("File");
 
         JMenuItem jMenuFileOpen = new JMenuItem("Open");
-        JMenuItem jMenuFileSave = new JMenuItem("Save as...");
+        JMenuItem jMenuFileSave = new JMenuItem("Save");
+        JMenuItem jMenuFileSaveAs = new JMenuItem("Save as...");
 
         MenuFileActions menuFileActions = new MenuFileActions(this);
         jMenuFileOpen.addActionListener(menuFileActions.new OpenAction());
-        jMenuFileSave.addActionListener(menuFileActions.new SaveAsAction());
+        jMenuFileSave.addActionListener(menuFileActions.new SaveAction());
+        jMenuFileSaveAs.addActionListener(menuFileActions.new SaveAsAction());
 
         jMenuFileOpen.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK));
-        jMenuFileSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
+        jMenuFileSaveAs.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
+        jMenuFileSaveAs.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK + InputEvent.SHIFT_DOWN_MASK));
 
         jMenuBar.add(jMenuFile);
         jMenuFile.add(jMenuFileOpen);
         jMenuFile.add(jMenuFileSave);
+        jMenuFile.add(jMenuFileSaveAs);
 
         //edit
         JMenu editMenu = new JMenu("Edit");
@@ -339,4 +359,12 @@ public class ImageEditor extends JDialog {
 
     }
 
+    public File getFile() {
+        return file;
+    }
+
+    public ImageEditor setFile(File file) {
+        this.file = file;
+        return this;
+    }
 }

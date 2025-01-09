@@ -51,13 +51,33 @@ public class JScrollPaneImage extends JScrollPane {
         public void paintComponent(Graphics g) {
             super.paintComponent(g);
             Graphics2D g2d = (Graphics2D) g.create();
-            g2d.clearRect(0, 0, getWidth(), getHeight());
+            g2d.setColor(getBackground());
+            g2d.fillRect(0, 0, getWidth(), getHeight());
             g2d.transform(tx);
             int dx = 0, dy = 0;
             if (getWidth() >= getPreferredSize().getWidth() && getHeight() >= getPreferredSize().getHeight()) {
                 dx = getWidth() / 2 - getPreferredSize().width / 2;
                 dy = getHeight() / 2 - getPreferredSize().height / 2;
             }
+
+            g.setColor(new Color(230, 230, 230));
+
+            g.fillRect(dx, dy, getPreferredSize().width, getPreferredSize().height);
+
+            float qs = 32f;
+
+            g.setColor(new Color(106, 106, 106));
+
+            for (float x = 0; x < getPreferredSize().width; x += qs * 2) {
+                for (float y = 0; y < getPreferredSize().height; y += qs * 2) {
+                    g.fillRect((int) x + dx, (int) y + dy, (int) qs, (int) qs);
+                    g.fillRect((int) (x + qs) + dx, (int) (y + qs) + dy, (int) qs, (int) qs);
+                }
+            }
+            g.setColor(getBackground());
+            g.fillRect(dx + getPreferredSize().width, dy, (int) qs * 2, (int) (getPreferredSize().height + qs * 2));
+            g.fillRect(dx, dy + getPreferredSize().height, (int) (getPreferredSize().width + qs * 2), (int) qs * 2);
+
             g.drawImage(image, dx, dy, getPreferredSize().width, getPreferredSize().height, null);
             g2d.dispose();
         }
